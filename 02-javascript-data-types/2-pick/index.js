@@ -4,6 +4,17 @@
  * @param {...string} fields - the properties paths to pick
  * @returns {object} - returns the new object
  */
-export const pick = (obj, ...fields) => {
+export function pick (obj, ...fields) {
+  const keys = [...arguments].splice(1);
+  const newObj = {};
+
+  for (const key of keys) {
+    newObj[key] = obj[key];
+  }
+
+  return newObj;
 
 };
+
+
+
