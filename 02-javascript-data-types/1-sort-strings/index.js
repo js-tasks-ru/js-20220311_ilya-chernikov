@@ -5,22 +5,19 @@
  * @returns {string[]}
  */
 export function sortStrings(arr, param = 'asc') {
-  let sorted_array = arr.slice().sort(sort);
-
-  if (param === "asc") {
-    return sorted_array;
-  } else if (param === "desc") {
-    return sorted_array.reverse();
-  } else {
-    return null;
-  }
-
+  return arr.slice().sort(sort(param));
 }
 
-function sort(a, b) {
- return a.localeCompare(b, ['ru', 'en'], {'caseFirst': 'upper'});
-}
+function sort(dir) {
+  return (a, b) => {
+    if (dir === "asc") {
+      return a.localeCompare(b, ['ru', 'en'], {'caseFirst': 'upper'});
+    } else if (dir === "desc") {
+      return b.localeCompare(a, ['ru', 'en'], {'caseFirst': 'upper'});
+    }
 
+  };
+}
 
 
 

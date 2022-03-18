@@ -5,7 +5,7 @@
  * @returns {object} - returns the new object
  */
 export function pick (obj, ...fields) {
-  const keys = [...arguments].splice(1);
+  const keys = fields;
   const newObj = {};
 
   for (const key of keys) {
