@@ -5,13 +5,14 @@
  * @returns {object} - returns the new object
  */
 export function omit (obj, ...fields) {
-  const keys = fields;
-  const restKeys = Object.keys(obj).filter(key => !keys.includes(key));
-  const newObj = {};
-  for (const key of restKeys) {
-    newObj[key] = obj[key];
+  const omitObj = {};
+  fields = fields.map(elem => elem.toString());
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (!fields.includes(key)) {
+      omitObj[key] = value;
+    }
   }
 
-  return newObj;
+  return omitObj;
 }
-
