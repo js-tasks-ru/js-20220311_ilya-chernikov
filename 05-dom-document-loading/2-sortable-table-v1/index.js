@@ -1,13 +1,9 @@
 export default class SortableTable {
-  static defaultTemplate = function (itemObj) {
-    return `<div class="sortable-table__cell">${itemObj[this.id]}</div>`;
-  }
-
 
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
     for (const confEl of this.headerConfig) {
-      if (!confEl.template) { confEl.template = SortableTable.defaultTemplate;}
+      if (!confEl.template) { confEl.template = this.getDefaultTemplate;}
     }
     this.data = data;
 
@@ -93,6 +89,10 @@ export default class SortableTable {
   sortByType (type, a, b) {
     if (type === 'number') {return a - b;}
     if (type === 'string') {return a.localeCompare(b, ['ru', 'en'], {'caseFirst': 'upper'});}
+  }
+
+  getDefaultTemplate (itemObj) {
+    return `<div class="sortable-table__cell">${itemObj[this.id]}</div>`;
   }
 
 }
