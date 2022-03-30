@@ -2,9 +2,7 @@ export default class SortableTable {
 
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
-    for (const confEl of this.headerConfig) {
-      if (!confEl.template) { confEl.template = this.getDefaultTemplate;}
-    }
+    this.parseConfig();
     this.data = data;
 
     this.render();
@@ -67,23 +65,26 @@ export default class SortableTable {
   }
 
   getTemplateTableBody (sortedData) {
-    return sortedData.reduce((value, item) =>{
-      return value + `
+    return sortedData.map(item =>{
+      return `
         <a href="/products/${item.id}" class="sortable-table__row">
-          ${this.headerConfig.reduce((valueConf, itemConf) => {
-            return valueConf + itemConf.template(item);
-          }, '')}
+          ${this.headerConfig.map(itemConf => {
+            return itemConf.template(item);
+           }).join('')}
         </a>
       `;
-    }, '');
+    }).join('');
   }
 
   getSortType (field) {
-    for (const f of this.headerConfig) {
-      if (f.id === field) {
-        if (f.sortable) {return f.sortType}
+    for (const item of this.headerConfig) {
+      if (item.id === field) {
+        if (item.sortable) {
+          return item.sortType;
+        }
       }
     }
+
   }
 
   sortByType (type, a, b) {
@@ -93,6 +94,15 @@ export default class SortableTable {
 
   getDefaultTemplate (itemObj) {
     return `<div class="sortable-table__cell">${itemObj[this.id]}</div>`;
+  }
+
+  parseConfig () {
+    for (const confEl of this.headerConfig) {
+      if (!confEl.template) {
+        confEl.template = this.getDefaultTemplate;
+      }
+    }
+
   }
 
 }

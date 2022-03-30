@@ -1,16 +1,16 @@
 export default class NotificationMessage {
-  static Instance = null
+  static instance = null
   static defaultElement
 
   constructor(message = 'Hello world', options = {}) {
     ({duration: this.duration = 1000, type: this.type = 'success', } = options);
     this.message = message;
-    if (!NotificationMessage.defaultElement) {NotificationMessage.defaultElement = document.querySelector('body');}
+    if (!NotificationMessage.defaultElement) {NotificationMessage.defaultElement = document.body;}
 
-    if (!NotificationMessage.Instance) {
+    if (!NotificationMessage.instance) {
       this._render();
     } else {
-      NotificationMessage.Instance.destroy();
+      NotificationMessage.instance.destroy();
       this._render();
     }
 
@@ -35,7 +35,7 @@ export default class NotificationMessage {
     const div = document.createElement('div');
     div.innerHTML = this.getTemplate();
     this.element = div.firstElementChild;
-    NotificationMessage.Instance = this;
+    NotificationMessage.instance = this;
   }
 
   show (element = NotificationMessage.defaultElement) {
