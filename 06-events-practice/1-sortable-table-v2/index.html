@@ -19,7 +19,7 @@
       template: (data = []) => {
         return `
           <div class="sortable-table__cell">
-            <img class="sortable-table-image" alt="Image" src="${data[0]?.url}">
+            <img class="sortable-table-image" alt="Image" src="${data.images[0].url || 'https://via.placeholder.com/32'}">
           </div>
         `;
       }
@@ -51,13 +51,11 @@
   ];
 
   const sortableTable = new SortableTable(headerConfig, {
-    data,
-    sorted: {
-      id: headerConfig.find(item => item.sortable).id,
-      order: 'asc'
-    }
+    data
   });
 
+
   root.append(sortableTable.element);
+  sortableTable.destroy();
 </script>
 </body>
