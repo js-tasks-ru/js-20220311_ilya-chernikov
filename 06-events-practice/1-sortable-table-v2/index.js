@@ -25,46 +25,53 @@ export default class SortableTable {
   }
 
   initEventListeners () {
-    document.addEventListener("DOMContentLoaded", () =>{
-      if (!this.onArrowLink) {
-        this.onArrowLink = document.querySelector(`[data-id=${this.defaultSort.id}] .sortable-table__sort-arrow`);
-        if (this.onArrowLink) {
-          this.onArrowLink.style.opacity = 1;
-        } else {
-          this.onArrowLink = document.querySelector('.sortable-table__sort-arrow');
-        }
+    if (document.readyState !== 'complete') {
+      document.addEventListener('DOMContentLoaded', this._initEvents.bind(this));
+    } else {
+      this._initEvents();
+    }
 
+  }
+
+  _initEvents () {
+    if (!this.onArrowLink) {
+      this.onArrowLink = document.querySelector(`[data-id=${this.defaultSort.id}] .sortable-table__sort-arrow`);
+      if (this.onArrowLink) {
+        this.onArrowLink.style.opacity = 1;
+      } else {
+        this.onArrowLink = document.querySelector('.sortable-table__sort-arrow');
       }
-      const columnsArray = document.querySelectorAll('.sortable-table__header .sortable-table__cell');
 
-      for (let column of columnsArray) {
-        column.addEventListener('pointerdown', (event) =>{
-          if (event.target.nodeName !== 'SPAN') {
-            return;
-          }
+    }
 
-          const divColumnElem = event.target.parentNode;
-          if (divColumnElem.dataset.sortable === 'false') {return;}
+    document.querySelector('.sortable-table__header').addEventListener('pointerdown', this.handleSortEvent.bind(this));
 
-          this.sort(divColumnElem.dataset.id, divColumnElem.dataset.order);
-          if (divColumnElem.dataset.order === 'asc') {
-            divColumnElem.dataset.order = 'desc';
-          } else if (divColumnElem.dataset.order === 'desc') {
-            divColumnElem.dataset.order = 'asc';
-          }
+  }
 
-          const newArrowLink = divColumnElem.querySelector('.sortable-table__sort-arrow');
-          if (newArrowLink !== this.onArrowLink) {
-            newArrowLink.style.opacity = 1;
-            this.onArrowLink.style.opacity = 0;
-            this.onArrowLink = newArrowLink;
-          }
+  handleSortEvent (event) {
+    const sorTablCell = event.target.closest('.sortable-table__cell');
+    if (!sorTablCell) return;
+    if (sorTablCell.dataset.sortable === 'false') return;
+
+    this.sort(sorTablCell.dataset.id, sorTablCell.dataset.order);
+    if (sorTablCell.dataset.order === 'asc') {
+      sorTablCell.dataset.order = 'desc';
+    } else if (sorTablCell.dataset.order === 'desc') {
+      sorTablCell.dataset.order = 'asc';
+    }
+
+    const newArrowLink = sorTablCell.querySelector('.sortable-table__sort-arrow');
+    if (newArrowLink !== this.onArrowLink) {newArrowLink.style.opacity = 1;
+      this.onArrowLink.style.opacity = 0;
+      this.onArrowLink = newArrowLink;
+    }
 
 
 
-        });
-      }
-    });
+
+
+
+
   }
 
   sort (fieldValue = this.defaultSort.id, orderValue = this.defaultSort.order, isSortLocally = this.isSortLocally) {
