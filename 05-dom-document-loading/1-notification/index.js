@@ -6,14 +6,11 @@ export default class NotificationMessage {
     ({duration: this.duration = 1000, type: this.type = 'success', } = options);
     this.message = message;
     if (!NotificationMessage.defaultElement) {NotificationMessage.defaultElement = document.body;}
-
-    if (!NotificationMessage.instance) {
-      this._render();
-    } else {
+    if (NotificationMessage.instance) {
       NotificationMessage.instance.destroy();
-      this._render();
     }
 
+    this._render();
 
   }
 
