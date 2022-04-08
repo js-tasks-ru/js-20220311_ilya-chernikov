@@ -1,7 +1,5 @@
 import fetchJson from './utils/fetch-json.js';
 
-const BACKEND_URL = 'https://course-js.javascript.ru';
-const   DEFAULT_TYPE = 'order';
 export default class ColumnChart {
 
   constructor(options = {}) {
@@ -32,7 +30,7 @@ export default class ColumnChart {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = this.getTemplate();
 
-    if (this.data.length !== 0) {
+    if (this.data.length) {
       wrapper.querySelector('.column-chart__chart').append(...this._formDataColumns(this.data));
       wrapper.querySelector('.column-chart').classList.remove('column-chart_loading');
     }
@@ -68,18 +66,18 @@ export default class ColumnChart {
   }
 
 
-  update () {
+  update (...args) {
     this.element.querySelector('.column-chart').classList.add('column-chart_loading');
-    if (arguments.length === 0) {
+    if (!args.length) {
       this._fetchData();
       return;
     }
-    if (arguments[0] instanceof Array) {
-      this._update(arguments[0]);
+    if (args[0] instanceof Array) {
+      this._update(args[0]);
       return;
     }
-    if (arguments[0] instanceof Date) {
-      this.fetchData(...arguments);
+    if (args[0] instanceof Date) {
+      this.fetchData(...args);
     }
 
   }
@@ -115,5 +113,7 @@ export default class ColumnChart {
   }
 
 
-
 }
+
+const BACKEND_URL = 'https://course-js.javascript.ru';
+const   DEFAULT_TYPE = 'order';

@@ -43,6 +43,9 @@ class Tooltip {
     this.element = null;
     Tooltip.instancepointer = null;
     Tooltip.isInitialized = false;
+    document.removeEventListener('pointerover', this.onPointerOver);
+    document.removeEventListener('pointerout', this.onPointerOut);
+    document.removeEventListener('pointermove', this.onPointerMove);
   }
 
   remove () {
