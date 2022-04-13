@@ -12,14 +12,17 @@ export default class ProductForm {
 
   async render () {
     const div = document.createElement('div');
-    let productData = {};
+    const productPromise = this.productId
+      ? fetch(`${BACKEND_URL}/api/rest/products?id=${this.productId}`).then(resp => resp.json())
+      : Promise.resolve([{}]);
 
-    if (this.productId) {
-      productData = await fetch(`${BACKEND_URL}/api/rest/products?id=${this.productId}`).then(resp => resp.json());
-      productData = productData[0];
-    }
-    div.innerHTML = await this.getTemplate(productData);
+    const categoryPromise = fetch(`${BACKEND_URL}/api/rest/categories?_sort=weight&_refs=subcategory`).then(resp => resp.json());
+
+    const [productData, categoryData] = await Promise.all([productPromise, categoryPromise]);
+    div.innerHTML = this.getTemplate(productData[0], categoryData);
     this.element = div.firstElementChild;
+
+
   }
 
   getImagesTemplate (imagesArray) {
@@ -43,8 +46,7 @@ export default class ProductForm {
     }).join('');
   }
 
-  async getCategotiesTemplate () {
-    const response = await fetch(`${BACKEND_URL}/api/rest/categories?_sort=weight&_refs=subcategory`).then(resp => resp.json());
+  getCategotiesTemplate (response) {
     return response.map(item => {
       return item.subcategories.map(subcategory => {
         return `
@@ -52,6 +54,7 @@ export default class ProductForm {
         `;
       }).join('');
     }).join('');
+
   }
 
   getProductStatus (status) {
@@ -68,7 +71,7 @@ export default class ProductForm {
     }
   }
 
-  async getTemplate(productData) {
+  getTemplate(productData, categoryData) {
     return `
       <div class="product-form">
     <form data-element="productForm" class="form-grid">
@@ -93,7 +96,7 @@ export default class ProductForm {
       <div class="form-group form-group__half_left">
         <label class="form-label">Категория</label>
         <select class="form-control" name="subcategory">
-            ${await this.getCategotiesTemplate()}
+            ${this.getCategotiesTemplate(categoryData)}
         </select>
       </div>
       <div class="form-group form-group__half_left form-group__two-col">
