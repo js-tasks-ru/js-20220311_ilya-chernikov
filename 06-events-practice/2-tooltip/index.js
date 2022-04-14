@@ -5,12 +5,14 @@ class Tooltip {
     const target = event.target;
     if (!event.target.dataset.tooltip) {return;}
 
-    this.element.style.opacity = '1';
+    // this.element.style.opacity = '1';
+    document.body.appendChild(this.element);
     document.addEventListener('pointermove', this.onPointerMove);
     this.element.textContent = event.target.dataset.tooltip;
   }
   onPointerOut = event =>{
-    this.element.style.opacity = '0';
+    // this.element.style.opacity = '0';
+    this.remove();
     document.removeEventListener('pointermove', this.onPointerMove);
   }
   onPointerMove = event =>{
@@ -26,7 +28,6 @@ class Tooltip {
 
   initialize () {
     if(Tooltip.isInitialized) {return;}
-    document.body.appendChild(this.element);
     this.initEvents();
   }
 
@@ -34,7 +35,8 @@ class Tooltip {
     const div = document.createElement('div');
     div.innerHTML = `<div class="tooltip">This is tooltip</div>`;
     this.element = div.firstElementChild;
-    this.element.style.opacity = '0';
+    // this.element.style.opacity = '0';
+
 
   }
 
@@ -43,6 +45,9 @@ class Tooltip {
     this.element = null;
     Tooltip.instancepointer = null;
     Tooltip.isInitialized = false;
+    document.removeEventListener('pointerover', this.onPointerOver);
+    document.removeEventListener('pointerout', this.onPointerOut);
+    document.removeEventListener('pointermove', this.onPointerMove);
   }
 
   remove () {
