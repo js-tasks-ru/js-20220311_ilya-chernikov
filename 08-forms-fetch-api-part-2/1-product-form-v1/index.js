@@ -1,11 +1,60 @@
 import escapeHtml from './utils/escape-html.js';
 import fetchJson from './utils/fetch-json.js';
+import ImageUploader from '../ImageUploader/index.js';
 // import {stat} from "@babel/core/lib/gensync-utils/fs";
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
 const BACKEND_URL = 'https://course-js.javascript.ru';
 
 export default class ProductForm {
+  subelements = {}
+  imageUploadOnClick = (event) => {
+    const target = event.target;
+    if (!target.closest('[name="uploadImage"]')) return;
+
+    fileInput.click();
+
+  }
+  fetchImageOnServer = async (event) => {
+    const uploader = new ImageUploader();
+
+    try {
+      const [file] = fileInput.files;
+      const response = await uploader.upload(file);
+      if (response.error) {
+        console.error(response.error);
+        return;
+      }
+
+      this.subelements.imagesUl.insertAdjacentHTML('beforeend', this.getImagesTemplate([{url: response.data.link, source: response.data.id}]));
+    } catch (error) {
+      console.error(error);
+    }
+
+  }
+  productSaveOnClick = async (event) => {
+    const target = event.target;
+    if (!target.closest('[name="save"]')) return;
+
+    const formData = this.formDataToJson();
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/rest/products`, {
+        method: this.productId ? 'PATCH' : 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: formData
+      });
+      console.error('DONE');
+      console.error(response);
+    } catch (error){
+      console.error('problem');
+      console.error(error);
+    }
+
+
+  }
+
   constructor (productId) {
     this.productId = productId;
   }
@@ -21,7 +70,8 @@ export default class ProductForm {
     const [productData, categoryData] = await Promise.all([productPromise, categoryPromise]);
     div.innerHTML = this.getTemplate(productData[0], categoryData);
     this.element = div.firstElementChild;
-
+    this.subelements.imagesUl = this.element.querySelector('[data-element="imageListContainer"] .sortable-list');
+    this.initEvents();
 
   }
 
@@ -92,6 +142,7 @@ export default class ProductForm {
           </ul>
         </div>
         <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
+        <input id="fileInput" type="file" hidden>
       </div>
       <div class="form-group form-group__half_left">
         <label class="form-label">Категория</label>
@@ -124,6 +175,12 @@ export default class ProductForm {
     `;
   }
 
+  initEvents () {
+    document.addEventListener('click', this.imageUploadOnClick);
+    document.addEventListener('click', this.productSaveOnClick);
+    this.element.querySelector('#fileInput').addEventListener('change', this.fetchImageOnServer);
+  }
+
   destroy () {
     this.remove();
     this.element = null;
@@ -132,4 +189,33 @@ export default class ProductForm {
   remove () {
     this.element.remove();
   }
+
+  formDataToJson () {
+    const form = this.element.querySelector('form');
+    const subcat = form.querySelector('[name="subcategory"]');
+    const ststus = form.querySelector('[name="status"]');
+    return `
+         {
+          "id": "${this.productId}",
+          "title": "${form.querySelector('[name="title"]').value}",
+          "description": "${form.querySelector('[name="description"]').textContent}",
+          "subcategory": "${subcat.options[subcat.selectedIndex].value}",
+          "price": "${form.querySelector('[name="price"]').value},
+          "quantity": "${form.querySelector('[name="quantity"]').value},
+          "discount": ${form.querySelector('[name="discount"]').value || 0},
+          "status": ${ststus.options[ststus.selectedIndex].value},
+          "images": ${this.getImagesList()}
+      }
+   `;
+  }
+
+  getImagesList () {
+    return [...this.subelements.imagesUl.querySelectorAll('li')].map(item => {
+      return JSON.stringify({
+        source: item.querySelector('[name="source"]').value,
+        url: item.querySelector('[name="url"]').value
+      });
+    });
+  }
+
 }
