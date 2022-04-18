@@ -3,7 +3,7 @@ export default class NotificationMessage {
   static defaultElement
 
   constructor(message = 'Hello world', options = {}) {
-    ({duration: this.duration = 1000, type: this.type = 'success', } = options);
+    ({duration: this.duration = 4000, type: this.type = 'success', } = options);
     this.message = message;
     if (!NotificationMessage.defaultElement) {NotificationMessage.defaultElement = document.body;}
     if (NotificationMessage.instance) {
