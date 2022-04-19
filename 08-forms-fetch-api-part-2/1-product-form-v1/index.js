@@ -1,11 +1,72 @@
 import escapeHtml from './utils/escape-html.js';
 import fetchJson from './utils/fetch-json.js';
+import ImageUploader from '../ImageUploader/index.js';
+import Notification from '../../05-dom-document-loading/1-notification/index.js';
 // import {stat} from "@babel/core/lib/gensync-utils/fs";
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
 const BACKEND_URL = 'https://course-js.javascript.ru';
 
 export default class ProductForm {
+  subelements = {}
+  imageUploadOnClick = (event) => {
+    const target = event.target;
+    if (!target.closest('[name="uploadImage"]')) return;
+
+    fileInput.click();
+
+  }
+  fetchImageOnServer = async (event) => {
+    const uploader = new ImageUploader();
+    const uplBtn = this.subelements.uploadImg;
+
+    try {
+      const [file] = fileInput.files;
+      uplBtn.classList.add('is-loading');
+      uplBtn.disabled = true;
+      const response = await uploader.upload(file);
+      if (response.error) {
+        console.error(response.error);
+        return;
+      }
+
+      this.subelements.imageListContainer.insertAdjacentHTML('beforeend', this.getImagesTemplate([{url: response.data.link, source: response.data.id}]));
+    } catch (error) {
+      console.error(error);
+    }
+    finally {
+      uplBtn.classList.remove('is-loading');
+      uplBtn.disabled = false;
+    }
+
+  }
+  productSaveOnClick = async (event) => {
+    // const target = event.target;
+    // if (!target.closest('[name="save"]')) return;
+    event.preventDefault();
+    const formData = this.formDataToJson();
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/rest/products`, {
+        method: this.productId ? 'PATCH' : 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: formData
+      }).then(r => r.json());
+      console.error('DONE');
+      this.dispatchEvent(response.id);
+      const notification = new Notification("Успешно сохранено!", {type: 'success'});
+      notification.show();
+    } catch (error){
+      const notification = new Notification("Возникла проблема при сохранении!", {type: 'error'});
+      notification.show();
+      console.error('problem');
+      console.error(error);
+    }
+
+
+  }
+
   constructor (productId) {
     this.productId = productId;
   }
@@ -21,7 +82,9 @@ export default class ProductForm {
     const [productData, categoryData] = await Promise.all([productPromise, categoryPromise]);
     div.innerHTML = this.getTemplate(productData[0], categoryData);
     this.element = div.firstElementChild;
-
+    this.subelements = this.getSubelements();
+    this.subelements.uploadImg = this.subelements['sortable-list-container'].querySelector('[name="uploadImage"]');
+    this.initEvents();
 
   }
 
@@ -92,6 +155,7 @@ export default class ProductForm {
           </ul>
         </div>
         <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
+        <input id="fileInput" type="file" hidden>
       </div>
       <div class="form-group form-group__half_left">
         <label class="form-label">Категория</label>
@@ -105,7 +169,7 @@ export default class ProductForm {
           <input required="" type="number" name="price" class="form-control" placeholder="100" value="${productData.price || ''}"> </fieldset>
         <fieldset>
           <label class="form-label">Скидка ($)</label>
-          <input required="" type="number" name="discount" class="form-control" placeholder="0" value="${productData.discount || ''}"> </fieldset>
+          <input required="" type="number" name="discount" class="form-control" placeholder="0" value="${productData.discount || 0}"> </fieldset>
       </div>
       <div class="form-group form-group__part-half">
         <label class="form-label">Количество</label>
@@ -124,12 +188,70 @@ export default class ProductForm {
     `;
   }
 
+  initEvents () {
+    document.addEventListener('click', this.imageUploadOnClick);
+    // document.addEventListener('click', this.productSaveOnClick);
+    this.element.querySelector('[data-element="productForm"]').addEventListener('submit', this.productSaveOnClick);
+    this.element.querySelector('#fileInput').addEventListener('change', this.fetchImageOnServer);
+  }
+
   destroy () {
     this.remove();
     this.element = null;
+    this.subelements = null;
+    document.removeEventListener('click', this.imageUploadOnClick);
   }
 
   remove () {
     this.element.remove();
   }
+
+  formDataToJson () {
+    const form = this.element.querySelector('form');
+    const subcat = form.querySelector('[name="subcategory"]');
+    const ststus = form.querySelector('[name="status"]');
+    return `
+         {
+          "id": "${this.productId}",
+          "title": "${form.querySelector('[name="title"]').value}",
+          "description": "${form.querySelector('[name="description"]').textContent}",
+          "subcategory": "${subcat.options[subcat.selectedIndex].value}",
+          "price": "${form.querySelector('[name="price"]').value},
+          "quantity": "${form.querySelector('[name="quantity"]').value},
+          "discount": ${form.querySelector('[name="discount"]').value || 0},
+          "status": ${ststus.options[ststus.selectedIndex].value},
+          "images": ${this.getImagesList()}
+      }
+   `;
+  }
+
+  getImagesList () {
+    return [...this.subelements.imageListContainer.querySelectorAll('li')].map(item => {
+      return JSON.stringify({
+        source: item.querySelector('[name="source"]').value,
+        url: item.querySelector('[name="url"]').value
+      });
+    });
+  }
+
+  dispatchEvent (productId) {
+    const event = this.productId
+      ? new CustomEvent('product-updated', { detail: id })
+      : new CustomEvent('product-saved');
+
+    this.element.dispatchEvent(event);
+
+  }
+
+  getSubelements () {
+    const subelements = {};
+    const elements = this.element.querySelectorAll('[data-element]');
+
+    for (const element of elements) {
+      subelements[element.dataset.element] = element;
+    }
+
+    return subelements;
+  }
+
 }
