@@ -5,7 +5,6 @@ const BACKEND_URL = 'https://course-js.javascript.ru';
 export default class SortableTable {
   onArrowLink = null
   start = 0
-  end = CHUNK_VALUE
   isLoading = false
   handleScrollEvent = async (event) =>{
     if (this.isLoading) return;
@@ -13,8 +12,8 @@ export default class SortableTable {
     const relativeBottom = document.documentElement.getBoundingClientRect().bottom;
     if (relativeBottom < Number(document.documentElement.clientHeight) + 100) {
       this.isLoading = true;
-      this.start += CHUNK_VALUE;
-      this.end += CHUNK_VALUE;
+      this.start += chunk;
+      this.end += chunk;
       const responseData = await this.fetchData();
       this._addData(responseData);
       this.isLoading = false;
@@ -27,9 +26,11 @@ export default class SortableTable {
     sorted = {id: 'title', order: 'asc'},
     isSortLocally = false,
     url,
-    immediateFetch = true
+    immediateFetch = true,
+    chunk = CHUNK_VALUE
   } = {}) {
     this.headerConfig = headerConfig;
+    this.end = chunk;
     this.parseConfig();
     this.isSortLocally = isSortLocally;
     this.defaultSort = sorted;
@@ -78,10 +79,11 @@ export default class SortableTable {
 
     }
 
-    // this.element.querySelector('.sortable-table__header').addEventListener('pointerdown', this.handleSortEvent.bind(this));
-    //Почему так не будет работать ?
-    document.addEventListener('pointerdown', this.handleSortEvent.bind(this));
-    window.addEventListener('scroll', this.handleScrollEvent);
+    this.element.querySelector('.sortable-table__header').addEventListener('pointerdown', this.handleSortEvent.bind(this));
+
+    if (!this.isSortLocally) {
+      window.addEventListener('scroll', this.handleScrollEvent);
+    }
 
   }
 
@@ -250,6 +252,8 @@ export default class SortableTable {
     url.searchParams.set('_end', end);
     url.searchParams.set('_order', order);
     url.searchParams.set('_sort', field);
+    if (this.isSortLocally)
+      return fetchJson(url).then(data => this.data = data);
     return fetchJson(url);
   }
 
@@ -271,6 +275,7 @@ export default class SortableTable {
 
   _addData (dataArray) {
     // this.element.querySelector('.column-chart').classList.remove('column-chart_loading');
+
     this.elementBodyLink.insertAdjacentHTML('beforeend', this.getTemplateTableBody(dataArray));
     this.elementBodyLink.parentElement.classList.remove('sortable-table_loading');
   }
