@@ -67,13 +67,13 @@ export default class ColumnChart {
   }
 
   fetchData ({
-    from = this.from,
-    to = this.to,
+    start = this.from,
+    end = this.to,
     url = this.url
   }={}) {
     return fetchJson(`${BACKEND_URL}/${url}?` + new URLSearchParams({
-      'from': from.toISOString(),
-      'to': to.toISOString()
+      'from': start.toISOString(),
+      'to': end.toISOString()
     }));
 
   }

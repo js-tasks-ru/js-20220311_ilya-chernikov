@@ -51,7 +51,7 @@ export default class ProductForm {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify(formData)
       }).then(r => r.json());
       console.error('DONE');
       this.dispatchEvent(response.id);
